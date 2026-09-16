@@ -1,0 +1,28 @@
+.lf-panel {box-sizing:border-box; padding:12px; margin:8px 0; border:1px solid var(--border-color-primary,#495361); border-radius:8px; background:var(--block-background-fill,#151b25); color:var(--body-text-color,#eee); width:100%;}
+.lf-panel .lf-row,.lf-genres,.lf-tags,.lf-chips,.lf-dialog .lf-row {display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.lf-panel button,.lf-dialog button {padding:5px 10px;border-radius:5px;border:1px solid var(--border-color-primary,#586476);background:var(--button-secondary-background-fill,#303947);color:var(--body-text-color,#eee);cursor:pointer;font-size:13px;}
+.lf-panel button:hover,.lf-dialog button:hover {border-color:#69b3ff;}
+.lf-panel button[aria-pressed="true"],.lf-chips button {background:#1769aa;color:#fff;border-color:#60a5fa;}
+.lf-panel button:disabled {opacity:.45;cursor:default;}
+.lf-genres {margin:10px 0;}
+.lf-count {margin-right:auto;font-size:13px;}
+.lf-status {font-size:12px;opacity:.8;margin-top:8px;overflow-wrap:anywhere;}
+.lf-status[data-error="true"] {color:#f99;opacity:1;}
+.lf-tag-details {margin-top:8px;}
+.lf-tag-details summary {cursor:pointer;font-size:13px;}
+.lf-tag-details .lf-row {margin:10px 0;}
+.lf-tags {max-height:180px;overflow-y:auto;align-items:flex-start;}
+.lf-panel input,.lf-panel select,.lf-dialog textarea {border:1px solid var(--border-color-primary,#586476);border-radius:5px;padding:7px;background:var(--input-background-fill,#202734);color:var(--body-text-color,#eee);}
+.lf-panel input {min-width:180px;}
+.card[data-lf-hidden="1"] {display:none!important;}
+.card .lf-edit {position:absolute;top:38px;right:5px;z-index:5;border:1px solid #8190a3;border-radius:4px;padding:4px 7px;background:#152338eb;color:white;font-size:12px;cursor:pointer;}
+.lf-dialog {box-sizing:border-box;position:fixed;inset:0;margin:auto;width:min(680px,94vw);height:fit-content;max-height:85vh;overflow:auto;padding:22px;border:1px solid #64748b;border-radius:10px;background:#151b25!important;color:#eee;opacity:1;box-shadow:0 20px 70px #0009;color-scheme:dark;}
+.lf-dialog button {background:#303947;color:#eee;}
+.lf-dialog textarea {background:#202734;color:#eee;}
+.lf-dialog::backdrop {background:#0009;}
+.lf-dialog h3 {font-size:18px;margin:0 0 12px;overflow-wrap:anywhere;}
+.lf-dialog p {font-size:13px;margin:10px 0;}
+.lf-dialog fieldset {display:flex;flex-wrap:wrap;gap:12px;padding:12px;margin:12px 0;border:1px solid #64748b;}
+.lf-dialog fieldset label {display:flex;gap:5px;align-items:center;}
+.lf-dialog textarea {box-sizing:border-box;display:block;width:100%;margin-top:8px;}
+.lf-panel :focus-visible,.lf-dialog :focus-visible {outline:2px solid #60a5fa;outline-offset:2px;}
