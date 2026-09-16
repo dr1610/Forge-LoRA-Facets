@@ -26,3 +26,8 @@
 .lf-dialog fieldset label {display:flex;gap:5px;align-items:center;}
 .lf-dialog textarea {box-sizing:border-box;display:block;width:100%;margin-top:8px;}
 .lf-panel :focus-visible,.lf-dialog :focus-visible {outline:2px solid #60a5fa;outline-offset:2px;}
+.lf-base-box {margin-top:10px;padding:12px;border:1px solid #526176;border-radius:8px;background:#151b25;color:#eee;}
+.lf-base-box[hidden] {display:none!important;}
+.lf-base-options {display:flex;flex-wrap:wrap;gap:6px;max-height:220px;overflow:auto;margin-top:12px;}
+.lf-base-box p {font-size:12px;margin:10px 0 0;color:#bcc9d8;}
+.lf-base-box button {background:#303947;color:#eee;}

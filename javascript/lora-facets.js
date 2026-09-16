@@ -6,7 +6,9 @@
     let loaded = false, loading = false, timer = null, pollTimer = null;
     const panels = new Map();
     const norm = value => value.toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+    const baseKey = item => (typeof item.base_model === 'string' ? item.base_model.trim() : '') || '不明';
     function matches(item, state) {
+        if (state.bases?.size && !state.bases.has(baseKey(item))) return false;
         if (state.genres.size && !item.genres.some(g => state.genres.has(g))) return false;
         const tags = new Set(item.tags.map(norm));
         const selected = [...state.tags];
@@ -67,13 +69,14 @@
         finally { loading = false; }
     }
     function persist(panel) {
-        try { sessionStorage.setItem('lora-facets:' + panel.id, JSON.stringify({genres: [...panel.state.genres], tags: [...panel.state.tags], mode: panel.state.mode})); }
+        try { sessionStorage.setItem('lora-facets:' + panel.id, JSON.stringify({genres: [...panel.state.genres], tags: [...panel.state.tags], bases: [...panel.state.bases], mode: panel.state.mode})); }
         catch (_) { /* storage can be disabled */ }
     }
     function change(panel) {
         persist(panel); renderOptions(panel); applyAll();
     }
     function renderOptions(panel) {
+        renderBases(panel);
         panel.genres.replaceChildren();
         const all = button('すべて', () => {panel.state.genres.clear(); change(panel);});
         all.setAttribute('aria-pressed', String(!panel.state.genres.size));
@@ -88,6 +91,10 @@
             panel.genres.append(b);
         }
         panel.chips.replaceChildren();
+        for (const base of panel.state.bases) {
+            const chip = button(base + ' ×', () => {panel.state.bases.delete(base); change(panel);});
+            chip.setAttribute('aria-label', 'ベースモデル ' + base + ' の絞り込みを解除'); panel.chips.append(chip);
+        }
         for (const tag of panel.state.tags) {
             const chip = button(tag + ' ×', () => {panel.state.tags.delete(tag); change(panel);});
             chip.setAttribute('aria-label', tag + ' の絞り込みを解除'); panel.chips.append(chip);
@@ -106,6 +113,7 @@
         const query = norm(panel.tagSearch.value);
         const counts = new Map();
         for (const item of data.items) {
+            if (panel.state.bases.size && !panel.state.bases.has(baseKey(item))) continue;
             if (panel.state.genres.size && !item.genres.some(g => panel.state.genres.has(g))) continue;
             for (const tag of new Set(item.tags.map(norm))) counts.set(tag, (counts.get(tag) || 0) + 1);
         }
@@ -121,6 +129,28 @@
         if (!tags.length) panel.tags.append(el('span', '該当するタグがありません'));
         if (tags.length > 120) panel.tags.append(el('span', `上位120件を表示（全${tags.length}件）。タグ名入力で絞り込めます。`));
     }
+    function renderBases(panel) {
+        panel.baseToggle.textContent = panel.state.bases.size ? `ベースモデル · ${panel.state.bases.size} 選択` : 'ベースモデル ▾';
+        panel.baseToggle.setAttribute('aria-expanded', String(!panel.baseBox.hidden));
+        const counts = new Map();
+        for (const item of data.items) {const key = baseKey(item); counts.set(key, (counts.get(key) || 0) + 1);}
+        for (const key of panel.state.bases) if (!counts.has(key)) counts.set(key, 0);
+        const query = norm(panel.baseSearch.value);
+        const focused = document.activeElement?.dataset.lfBase;
+        panel.baseOptions.replaceChildren();
+        for (const key of [...counts.keys()].sort((a,b) => a === '不明' ? 1 : b === '不明' ? -1 : a.localeCompare(b))) {
+            if (query && !norm(key).includes(query)) continue;
+            const b = button(`${key} (${counts.get(key)})`, () => {
+                if (panel.state.bases.has(key)) panel.state.bases.delete(key); else panel.state.bases.add(key);
+                change(panel);
+            });
+            b.dataset.lfBase = key;
+            b.setAttribute('aria-pressed', String(panel.state.bases.has(key)));
+            panel.baseOptions.append(b);
+            if (focused === key) b.focus();
+        }
+        if (!panel.baseOptions.childElementCount) panel.baseOptions.append(el('span', '該当するベースモデルがありません'));
+    }
     function mount(id) {
         const pane = root().getElementById(id + '_pane');
         if (!pane) return;
@@ -129,14 +159,36 @@
         if (panel) {panel.observer.disconnect(); panel.node.remove();}
         let saved = {};
         try { saved = JSON.parse(sessionStorage.getItem('lora-facets:' + id) || '{}'); } catch (_) { /* defaults */ }
-        const state = panel ? panel.state : {genres: new Set(saved.genres || []), tags: new Set(saved.tags || []), mode: saved.mode === 'or' ? 'or' : 'and'};
+        const state = panel ? panel.state : {genres: new Set(saved.genres || []), tags: new Set(saved.tags || []), bases: new Set(saved.bases || []), mode: saved.mode === 'or' ? 'or' : 'and'};
         const node = el('section', undefined, 'lf-panel');
         node.setAttribute('aria-label', 'LoRA ジャンルとタグの絞り込み');
         panel = {id, node, state, pane}; panels.set(id, panel);
         const top = el('div', undefined, 'lf-row');
         top.append(el('strong', 'LoRA ジャンル'));
         panel.count = el('span', '', 'lf-count'); top.append(panel.count);
-        top.append(button('絞り込み解除', () => {state.genres.clear(); state.tags.clear(); panel.tagSearch.value = ''; change(panel);}));
+        panel.baseBox = el('div', undefined, 'lf-base-box'); panel.baseBox.hidden = true;
+        panel.baseBox.id = id + '_lf_bases';
+        panel.baseToggle = button('ベースモデル ▾', () => {
+            panel.baseBox.hidden = !panel.baseBox.hidden;
+            panel.baseToggle.setAttribute('aria-expanded', String(!panel.baseBox.hidden));
+            if (!panel.baseBox.hidden) panel.baseSearch.focus();
+        });
+        panel.baseToggle.setAttribute('aria-controls', panel.baseBox.id);
+        panel.baseToggle.setAttribute('aria-expanded', 'false');
+        top.append(panel.baseToggle);
+        const baseHeader = el('div', undefined, 'lf-row');
+        baseHeader.append(el('strong', 'ベースモデル（複数選択・OR）'));
+        panel.baseSearch = el('input'); panel.baseSearch.type = 'search'; panel.baseSearch.placeholder = 'ベースモデルを探す';
+        panel.baseSearch.setAttribute('aria-label', 'ベースモデル候補を検索');
+        panel.baseSearch.addEventListener('input', () => renderBases(panel));
+        baseHeader.append(panel.baseSearch, button('モデル選択を解除', () => {state.bases.clear(); panel.baseSearch.value = ''; change(panel);}));
+        baseHeader.append(button('閉じる', () => {panel.baseBox.hidden = true; panel.baseToggle.setAttribute('aria-expanded','false'); panel.baseToggle.focus();}));
+        panel.baseOptions = el('div', undefined, 'lf-base-options');
+        panel.baseBox.append(baseHeader, panel.baseOptions, el('p', 'Civitaiのベースモデル名で絞り込みます。Forge標準フィルターで非表示のLoRAは表示されません。'));
+        panel.baseBox.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {event.stopPropagation(); panel.baseBox.hidden = true; panel.baseToggle.setAttribute('aria-expanded','false'); panel.baseToggle.focus();}
+        });
+        top.append(button('絞り込み解除', () => {state.genres.clear(); state.tags.clear(); state.bases.clear(); panel.tagSearch.value = ''; panel.baseSearch.value = ''; change(panel);}));
         top.append(button('分類情報を再読込', () => reload(true)));
         panel.sync = button('不足情報をCivitaiから取得', async () => {
             await api('sync', {}); await reload();
@@ -160,7 +212,7 @@
         controls.append(panel.tagSearch, panel.mode);
         panel.tags = el('div', undefined, 'lf-tags'); details.append(controls, panel.tags);
         panel.status = el('div', '分類情報を読み込み中…', 'lf-status'); panel.status.setAttribute('role', 'status');
-        node.append(top, panel.genres, panel.chips, details, panel.status);
+        node.append(top, panel.baseBox, panel.genres, panel.chips, details, panel.status);
         pane.before(node);
         if (loaded) renderOptions(panel);
         const observer = new MutationObserver(schedule);

@@ -10,6 +10,10 @@ Forge Neoの **Extensions → Install from URL** に本リポジトリのURLを�
 
 ## 検索の違い
 
+上部の「ベースモデル」ボタンを開くと、Civitai情報に記録されたモデル名を複数選択できます。モデル間はOR、ジャンル・タグ・標準検索との組み合わせはANDです。情報がないLoRAは「不明」で選択できます。モデル名は統合せず、保存情報の表記を使います（例：SDXL 1.0、Pony、Illustrious、Anima）。
+
+この機能は現在のLoRAカード一覧をさらに絞り込みます。Forge標準フィルターで非表示・読み込み対象外となっているLoRAの表示や、モデルの互換性を変更する機能ではありません。
+
 - **Forge標準の検索欄**：ファイル名などの文字検索です。標準のAND・部分一致・順不同の動作を維持します。
 - **本拡張の「タグを探す」欄**：選択できるタグの候補を絞り込みます。ファイル名の検索欄ではありません。
 - **選択したタグとジャンル**：標準検索の結果をさらに絞り込みます。ファイル名とタグをまとめてOR検索する機能はありません。
@@ -53,5 +57,7 @@ ForgeのExtensions画面で本拡張を無効にして再起動します。LoRA�
 ## 検証
 
 `python -m unittest discover -s tests -v`
+
+絞り込み条件のテスト（Node.js、追加パッケージ不要）: `node tests/test_filters.cjs`
 
 対象環境: Forge Neo、ローカル確認リビジョン `6f616e8d`。ホストのExtra Networks DOM (`*_lora_pane`, `*_lora_cards`, `data-name`) と `on_app_started` / `onUiLoaded` / `onUiUpdate` を利用します。
