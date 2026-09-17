@@ -31,3 +31,7 @@
 .lf-base-options {display:flex;flex-wrap:wrap;gap:6px;max-height:220px;overflow:auto;margin-top:12px;}
 .lf-base-box p {font-size:12px;margin:10px 0 0;color:#bcc9d8;}
 .lf-base-box button {background:#303947;color:#eee;}
+/* Keep paired foreground/background colors even when Forge overrides search inputs. */
+.lf-panel input[type="search"],.lf-panel select {background:#202734!important;color:#f1f5f9!important;-webkit-text-fill-color:#f1f5f9!important;caret-color:#f1f5f9;border-color:#718096;color-scheme:dark;opacity:1;}
+.lf-panel input[type="search"]::placeholder {color:#b8c5d6!important;-webkit-text-fill-color:#b8c5d6!important;opacity:1;}
+.lf-panel input[type="search"]::selection {background:#2563eb;color:#fff;-webkit-text-fill-color:#fff;}
